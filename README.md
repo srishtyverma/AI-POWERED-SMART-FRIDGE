@@ -1,4 +1,4 @@
-# 🧊 Smart Fridge — IoT Dashboard
+# IntelliFresh : AI Powered Smart Fridge with IoT (Dashboard)
 
 A full-stack IoT monitoring dashboard for a smart fridge system that integrates **real-time sensor data** from ThingSpeak, **AI/ML-based spoilage prediction**, **inventory management**, and **recipe recommendations**.
 
@@ -176,7 +176,16 @@ Open **http://localhost:5000** in your browser.
 
 ## Screenshots
 
-> Run the app and toggle between Light and Dark mode using the sidebar switch.
+### Model Images
+<img width="1035" height="575" alt="model img" src="https://github.com/user-attachments/assets/4fc21ea2-6585-4391-a9cc-75cebca14c34" />
+
+### Website Images
+<img width="1018" height="579" alt="website imgs" src="https://github.com/user-attachments/assets/5eec2766-2c57-453a-9954-a6ecbee0e22d" />
+
+<img width="1022" height="578" alt="website imgs -2" src="https://github.com/user-attachments/assets/4c311c06-d263-4042-a0fd-305e17cbeebf" />
+
+<img width="943" height="430" alt="image" src="https://github.com/user-attachments/assets/e165fe00-7f16-49e7-8805-bd828efc6299" />
+
 
 ---
 
@@ -187,12 +196,6 @@ Open **http://localhost:5000** in your browser.
 3. Commit your changes (`git commit -m 'Add new feature'`)
 4. Push to the branch (`git push origin feature/new-feature`)
 5. Open a Pull Request
-
----
-
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
 
 ---
 
