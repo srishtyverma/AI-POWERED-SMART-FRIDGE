@@ -18,11 +18,10 @@ import pandas as pd
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
-# ============================================================
-# THINGSPEAK CONFIGURATION — HARDCODED CREDENTIALS
-# ============================================================
-THINGSPEAK_CHANNEL_ID = "3358658"      # <-- Replace with your Channel ID
-THINGSPEAK_READ_API_KEY = "HJXJ6DZ373KXIDOA"    # <-- Replace with your Read API Key
+
+# THINGSPEAK CONFIGURATION 
+THINGSPEAK_CHANNEL_ID = os.getenv("THINGSPEAK_CHANNEL_ID")      # <-- Replace with your Channel ID
+THINGSPEAK_READ_API_KEY = os.getenv("THINGSPEAK_WRITE_API_KEY")    # <-- Replace with your Read API Key
 THINGSPEAK_BASE_URL = "https://api.thingspeak.com"
 
 # Field mapping
@@ -46,9 +45,8 @@ ALERT_THRESHOLDS = {
     'co_danger': 15
 }
 
-# ============================================================
+
 # LOAD ML MODEL
-# ============================================================
 MODEL = None
 MODEL_PATH = os.path.join(os.path.dirname(__file__), 'smart_fridge_model_v2.pkl')
 
@@ -64,9 +62,7 @@ def load_model():
 
 load_model()
 
-# ============================================================
 # LOAD & PREPROCESS RECIPES
-# ============================================================
 RECIPES = []
 RECIPES_PATH = os.path.join(os.path.dirname(__file__), 'recipes_processed.json')
 RAW_RECIPES_PATH = os.path.join(os.path.dirname(__file__), 'RAW_recipes.csv')
@@ -143,9 +139,7 @@ def load_recipes():
 
 load_recipes()
 
-# ============================================================
 # LOAD CSV INSIGHTS DATA
-# ============================================================
 def load_csv_insights():
     """Load ideal/warning/spoilage CSVs and compute aggregate stats."""
     insights = {'ideal': [], 'warning': [], 'spoilage': []}
@@ -194,9 +188,7 @@ def load_csv_insights():
         'heatmap': heatmap
     }
 
-# ============================================================
 # ROUTES
-# ============================================================
 
 @app.route('/')
 def index():
@@ -373,10 +365,8 @@ def update_config():
     return jsonify({'status': 'ok', 'channel_id': THINGSPEAK_CHANNEL_ID})
 
 
-# ============================================================
-# HELPER FUNCTIONS
-# ============================================================
 
+# HELPER FUNCTIONS
 def safe_float(val, default):
     try:
         return float(val) if val is not None else default
@@ -487,10 +477,7 @@ def get_time_based_prediction(days_stored):
     return {'class': max_class, 'probabilities': probs}
 
 
-# ============================================================
 # MAIN
-# ============================================================
-
 if __name__ == '__main__':
     print("=" * 60)
     print("  Smart Fridge IoT Dashboard")
