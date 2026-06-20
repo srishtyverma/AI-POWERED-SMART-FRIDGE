@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Smart Fridge IoT Dashboard — Real-time sensor monitoring, AI-powered spoilage prediction, inventory management, and recipe recommendations.">
+    <title>Smart Fridge — IoT Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleSidebar()">☰</button>
+
+    <!-- Alert Popup Modal -->
+    <div class="alert-popup-overlay" id="alertPopup">
+        <div class="alert-popup">
+            <span class="alert-popup-icon" id="alertPopupIcon">⚠️</span>
+            <h3 class="alert-popup-title" id="alertPopupTitle">Spoilage Alert!</h3>
+            <p class="alert-popup-message" id="alertPopupMessage">Critical conditions detected in your fridge.</p>
+            <button class="btn btn-primary" onclick="dismissAlertPopup()">Dismiss</button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- ============================================================
+         SIDEBAR
+         ============================================================ -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <div class="sidebar-logo-icon">🧊</div>
+                    <div class="sidebar-logo-text">
+                        <h1>Smart Fridge</h1>
+                        <p>IoT Dashboard</p>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <nav class="sidebar-nav">
+                <div class="nav-section-label">Monitoring</div>
+                <div class="nav-item active" data-panel="sensor" onclick="switchPanel('sensor')">
+                    Sensor Status
+                </div>
+                <div class="nav-item" data-panel="inventory" onclick="switchPanel('inventory')">
+                    Inventory
+                </div>
+
+                <div class="nav-section-label">Intelligence</div>
+                <div class="nav-item" data-panel="prediction" onclick="switchPanel('prediction')">
+                    AI Predictions
+                </div>
+                <div class="nav-item" data-panel="alerts" onclick="switchPanel('alerts')">
+                    Alerts
+                    <span class="nav-badge" id="alertBadge" style="display:none;">0</span>
+                </div>
+
+                <div class="nav-section-label">Recipes</div>
+                <div class="nav-item" data-panel="recipes" onclick="switchPanel('recipes')">
+                    Recipes
+                </div>
+
+                <div class="nav-section-label">System</div>
+                <div class="nav-item" data-panel="settings" onclick="switchPanel('settings')">
+                    Settings
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="theme-toggle" onclick="toggleTheme()">
+                    <span>Dark Mode</span>
+                    <div class="theme-toggle-switch"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ============================================================
+         MAIN CONTENT
+         ============================================================ -->
+        <main class="main-content" id="mainContent">
+
+            <!-- ======== SENSOR STATUS PANEL ======== -->
+            <div class="panel active" id="panel-sensor">
+                <div class="panel-header">
+                    <div class="panel-header-row">
+                        <div>
+                            <h2>Sensor Status</h2>
+                        </div>
+                        <div class="last-updated">
+                            <span class="dot"></span>
+                            <span id="lastUpdated">Fetching...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sensor-grid" id="sensorGrid">
+                    <!-- Temperature -->
+                    <div class="glass-card sensor-card status-safe" id="sensorTemp">
+                        <span class="sensor-icon">🌡️</span>
+                        <div class="sensor-value safe" id="tempValue">--</div>
+                        <div class="sensor-label">Temperature</div>
+                        <div class="sensor-unit">°C</div>
+                        <span class="sensor-status-badge safe" id="tempBadge">Normal</span>
+                    </div>
+
+                    <!-- Humidity -->
+                    <div class="glass-card sensor-card status-safe" id="sensorHumidity">
+                        <span class="sensor-icon">💧</span>
+                        <div class="sensor-value safe" id="humidityValue">--</div>
+                        <div class="sensor-label">Humidity</div>
+                        <div class="sensor-unit">%</div>
+                        <span class="sensor-status-badge safe" id="humidityBadge">Normal</span>
+                    </div>
+
+                    <!-- CO Gas -->
+                    <div class="glass-card sensor-card status-safe" id="sensorCO">
+                        <span class="sensor-icon">🔬</span>
+                        <div class="sensor-value safe" id="coValue">--</div>
+                        <div class="sensor-label">CO Gas</div>
+                        <div class="sensor-unit">ppm</div>
+                        <span class="sensor-status-badge safe" id="coBadge">Normal</span>
+                    </div>
+
+                    <!-- Door Status -->
+                    <div class="glass-card sensor-card status-safe" id="sensorDoor">
+                        <span class="sensor-icon">🚪</span>
+                        <div class="door-visual closed" id="doorVisual"></div>
+                        <div class="sensor-value safe" id="doorValue">Closed</div>
+                        <div class="sensor-label">Door Status</div>
+                        <span class="sensor-status-badge safe" id="doorBadge">Secure</span>
+                    </div>
+                </div>
+
+                <!-- History Charts -->
+                <div class="chart-row">
+                    <div class="glass-card">
+                        <div class="glass-card-header">
+                            <span class="glass-card-title"><span class="icon">📈</span> Temperature & Humidity
+                                History</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="tempHumidChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-card">
+                        <div class="glass-card-header">
+                            <span class="glass-card-title"><span class="icon">📊</span> CO Gas & Door Events</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="coDoorChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======== INVENTORY MANAGEMENT PANEL ======== -->
+            <div class="panel" id="panel-inventory">
+                <div class="panel-header">
+                    <h2>Inventory Management</h2>
+                    <p>Track stored items, conditions, and shopping needs</p>
+                </div>
+
+                <div class="tab-bar">
+                    <button class="tab-btn active" onclick="switchTab('inv', 'list', this)">Inventory List</button>
+                    <button class="tab-btn" onclick="switchTab('inv', 'shopping', this)">Shopping List</button>
+                </div>
+
+                <!-- Inventory List Tab -->
+                <div class="tab-content active" id="inv-list">
+                    <div class="inventory-controls">
+                        <input type="text" class="input-field" id="addItemInput"
+                            placeholder="Add item (e.g. Tomato, Milk, Carrot...)"
+                            onkeydown="if(event.key==='Enter') addInventoryItem()">
+                        <input type="number" class="input-field" id="addItemQty" placeholder="Qty" min="1" value="1"
+                            style="max-width:90px;text-align:center;"
+                            onkeydown="if(event.key==='Enter') addInventoryItem()">
+                        <button class="btn btn-primary" onclick="addInventoryItem()">
+                            ➕ Add Item
+                        </button>
+                    </div>
+
+                    <div class="stats-row" id="inventoryStats">
+                        <div class="glass-card stat-card">
+                            <div class="stat-value" id="statTotal">0</div>
+                            <div class="stat-label">Total Items</div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-value" style="color:var(--status-safe)" id="statIdeal">0</div>
+                            <div class="stat-label">Ideal</div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-value" style="color:var(--status-warning)" id="statWarning">0</div>
+                            <div class="stat-label">Warning</div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-value" style="color:var(--status-danger)" id="statSpoilt">0</div>
+                            <div class="stat-label">Spoilt</div>
+                        </div>
+                    </div>
+
+                    <div class="inventory-list" id="inventoryList">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📦</div>
+                            <div class="empty-state-text">No items in inventory. Add items above to start tracking!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shopping List Tab -->
+                <div class="tab-content" id="inv-shopping">
+                    <div class="glass-card">
+                        <div class="glass-card-header">
+                            <span class="glass-card-title"><span class="icon">🛒</span> Items Going Out of Stock</span>
+                        </div>
+                        <div id="shoppingRestock">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">✅</div>
+                                <div class="empty-state-text">All items are in good condition!</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="margin-top:18px;">
+                        <div class="glass-card-header">
+                            <span class="glass-card-title"><span class="icon">🍽️</span> Recommended Purchases for
+                                Recipes</span>
+                        </div>
+                        <div id="shoppingRecipe">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🍳</div>
+                                <div class="empty-state-text">Add inventory items to get recipe-based purchase
+                                    suggestions.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======== AI/ML PREDICTION PANEL ======== -->
+            <div class="panel" id="panel-prediction">
+                <div class="panel-header">
+                    <h2>AI/ML Predictions</h2>
+                    <p>Machine learning-powered spoilage forecasting for your inventory</p>
+                </div>
+
+                <!-- Prediction Results -->
+                <div class="glass-card" style="margin-bottom:18px;">
+                    <div class="glass-card-header">
+                        <span class="glass-card-title"><span class="icon">🧠</span> Spoilage Predictions</span>
+                        <button class="btn btn-secondary btn-sm" onclick="runPredictions()">🔄 Refresh</button>
+                    </div>
+                    <div class="prediction-grid" id="predictionGrid">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🤖</div>
+                            <div class="empty-state-text">Add items to inventory to see AI predictions.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Insights -->
+                <div class="section-title"><span class="icon">📊</span> Data Prediction Insights</div>
+                <div class="insights-grid">
+                    <div class="glass-card">
+                        <div class="glass-card-header">
+                            <span class="glass-card-title"><span class="icon">🥧</span> Condition Distribution</span>
+                        </div>
+                        <div class="insight-chart-container">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-card">
+                        <div class="glass-card-header">
+                            <span class="glass-card-title"><span class="icon">🌡️</span> Temperature vs Humidity
+                                Heatmap</span>
+                        </div>
+                        <div class="insight-chart-container">
+                            <canvas id="heatmapChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-card">
+                        <div class="glass-card-header">
+                            <span class="glass-card-title"><span class="icon">📉</span> Sensor Ranges by
+                                Condition</span>
+                        </div>
+                        <div class="insight-chart-container">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======== ALERTS & NOTIFICATIONS PANEL ======== -->
+            <div class="panel" id="panel-alerts">
+                <div class="panel-header">
+                    <div class="panel-header-row">
+                        <div>
+                            <h2>Alerts & Notifications</h2>
+                            <p>System alerts, maintenance reminders, and purchase recommendations</p>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="clearAllAlerts()">🗑️ Clear All</button>
+                    </div>
+                </div>
+
+                <div class="alerts-list" id="alertsList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔔</div>
+                        <div class="empty-state-text">No notifications yet. Alerts will appear here automatically.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======== RECIPE RECOMMENDATION PANEL ======== -->
+            <div class="panel" id="panel-recipes">
+                <div class="panel-header">
+                    <h2>Recipe Recommendations</h2>
+                    <p>Discover recipes based on your available ingredients</p>
+                </div>
+
+                <div class="tab-bar">
+                    <button class="tab-btn active" onclick="switchTab('rcp', 'recommended', this)">Recommended</button>
+                    <button class="tab-btn" onclick="switchTab('rcp', 'allrecipes', this)">All Recipes</button>
+                </div>
+
+                <!-- Recommended Recipes Tab -->
+                <div class="tab-content active" id="rcp-recommended">
+                    <div class="recipe-list" id="recommendedRecipes">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+
+                <!-- All Recipes Tab -->
+                <div class="tab-content" id="rcp-allrecipes">
+                    <div class="recipe-filters">
+                        <input type="text" class="input-field" id="recipeSearch" placeholder="Search recipes..."
+                            oninput="searchAllRecipes()">
+                        <button class="btn btn-secondary btn-sm" onclick="searchAllRecipes()">🔍 Search</button>
+                    </div>
+                    <div class="recipe-list" id="allRecipesList">
+                        <div class="spinner"></div>
+                    </div>
+                    <div class="pagination" id="recipePagination"></div>
+                </div>
+            </div>
+
+            <!-- ======== SETTINGS PANEL ======== -->
+            <div class="panel" id="panel-settings">
+                <div class="panel-header">
+                    <h2>Settings</h2>
+                    <p>Configure ThingSpeak connection and system preferences</p>
+                </div>
+
+                <div class="connection-status disconnected" id="connectionStatus" style="margin-bottom:18px;">
+                    <span class="connection-dot"></span>
+                    <span id="connectionText">Connecting...</span>
+                </div>
+
+                <div class="glass-card">
+                    <div class="settings-group">
+                        <div class="settings-group-title">ThingSpeak Configuration</div>
+                        <div class="settings-field">
+                            <label class="settings-label">Channel ID</label>
+                            <input type="text" class="input-field" id="settingChannelId" placeholder="e.g. 123456"
+                                style="width:100%;">
+                        </div>
+                        <div class="settings-field">
+                            <label class="settings-label">Read API Key</label>
+                            <input type="text" class="input-field" id="settingApiKey" placeholder="e.g. ABCDE12345"
+                                style="width:100%;">
+                        </div>
+                        <button class="btn btn-primary" onclick="saveSettings()" style="margin-top:8px;">Save
+                            Configuration</button>
+                    </div>
+
+
+
+                    <div class="settings-group">
+                        <div class="settings-group-title">Notification Intervals</div>
+                        <div class="settings-field">
+                            <label class="settings-label">Buy Reminder Interval (hours)</label>
+                            <input type="number" class="input-field" id="settingBuyInterval" value="3"
+                                style="width:100%;">
+                        </div>
+                        <div class="settings-field">
+                            <label class="settings-label">Clean Fridge Reminder (days)</label>
+                            <input type="number" class="input-field" id="settingCleanInterval" value="10"
+                                style="width:100%;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>
